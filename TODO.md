@@ -1,15 +1,15 @@
 ## Graphics
-[ ] Fix wrong piece positions when width of the screen is small
+- [ ] Fix wrong piece positions when width of the screen is small
 
-[ ] Check that highlighting of checkmate is ok
+- [ ] Check that highlighting of checkmate is ok
 
 ## Interface
-[ ] Add FEN-string input field and button `load FEN`
+- [ ] Add FEN-string input field and button `load FEN`
   + Field changes automatically when player make turn
 
-[ ] Show possible optimal moves with fixed depth
+- [ ] Show possible optimal moves with fixed depth
   + Arrows like in `lichess.org`
   + Score of each move
 
 ## Engine
-[ ] Make clear documentation for beginners
+- [ ] Make clear documentation for beginners
