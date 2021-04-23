@@ -1,3 +1,14 @@
+/** helper for entering side that can be 0 or 16 */
+const SIDE = {
+  black: 0,
+  red: 16
+}
+
+/** Represents square in `board` */
+const OUTER_SQUARE = -1;
+/** Represents square in `board` */
+const EMPTY_SQUARE = 0;
+
 /** Relative values to evaluate the material score of the position */
 const PIECE_WEIGHTS = [
   //   bP      bK     bA    bN    bB    bC    bR
@@ -61,36 +72,87 @@ const PALACE_ZONES = [
 /** Black pawn (Soldier)    */ const bP = 1;
 /** Black king (General)    */ const bA = 3;
 /** Black guard             */ const bK = 4;
-/** Black bishop (Elephant) */ const bB = 5;
-/** Black knight (Horse)    */ const bN = 6;
+/** Black knight (Horse)    */ const bB = 5;
+/** Black elephant          */ const bN = 6;
 /** Black canon             */ const bC = 7;
 /** Black rook (Chariot)    */ const bR = 8;
 
 /** Red pawn (Soldier)    */ const rP = 18;
 /** Red king (General)    */ const rA = 19;
 /** Red guard             */ const rK = 20;
-/** Red bishop (Elephant) */ const rB = 21;
-/** Red knight (Horse)    */ const rN = 22;
+/** Red knight (Horse)    */ const rB = 21;
+/** Red elephant          */ const rN = 22;
 /** Red canon             */ const rC = 23;
 /** Red rook (Chariot)    */ const rR = 24;
 
-/** 11x14 mailbox, contains pieces `bP, bA, ...`, empty squares `0` and outer squares `-1` */
-var board = [
-  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
-  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-  -1, rR, rB, rN, rK,  0, rK, rN, rB, rR, -1,
-  -1,  0,  0,  0,  0, rA,  0,  0,  0,  0, -1,
-  -1,  0, rC,  0,  0,  0,  0,  0, rC,  0, -1,
-  -1, rP,  0, rP,  0, rP,  0, rP,  0, rP, -1,
-  -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
-  -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
-  -1, bP,  0, bP,  0, bP,  0, bP,  0, bP, -1,
-  -1,  0, bC,  0,  0,  0,  0,  0, bC,  0, -1,
-  -1,  0,  0,  0,  0, bA,  0,  0,  0,  0, -1,
-  -1, bR, bB, bN, bK,  0, bK, bN, bB, bR, -1,
-  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
-  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+/** Starting board position */
+var startingBoard = [
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 10 = move index
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 21
+  -1, rR, rB, rN, rK,  0, rK, rN, rB, rR, -1, // 32
+  -1,  0,  0,  0,  0, rA,  0,  0,  0,  0, -1, // 43
+  -1,  0, rC,  0,  0,  0,  0,  0, rC,  0, -1, // 54
+  -1, rP,  0, rP,  0, rP,  0, rP,  0, rP, -1, // 65
+  -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1, // 76
+  -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1, // 87
+  -1, bP,  0, bP,  0, bP,  0, bP,  0, bP, -1, // 98
+  -1,  0, bC,  0,  0,  0,  0,  0, bC,  0, -1, // 109
+  -1,  0,  0,  0,  0, bA,  0,  0,  0,  0, -1, // 120
+  -1, bR, bB, bN, bK,  0, bK, bN, bB, bR, -1, // 131
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 142
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 153
 ];
+
+/** 11x14 mailbox, contains pieces `bP, bA, ...`, empty squares `0` and outer squares `-1`
+ * ```
+ * bP = 1, bA = 3, bK = 4, bB = 5, bN = 6, bC = 7, bR = 8 
+ * rP = 18, rA = 19, rK = 20, rB = 21, rN = 22, rC = 23, rR = 24
+ * ```
+*/
+var board = copyArray(startingBoard);
+
+/**
+ * Copy 1D array
+ * @param {any[]} a 
+ */
+function copyArray(a) {
+  let b = [];
+  for (let elem of a) {
+    b.push(elem);
+  }
+  return b;
+}
+
+/** Extend string `s` by character while it length not equal to `n`
+ * @param {string} s input string
+ * @param {number} n desired length of returned string
+ * @param {string} ch character
+*/
+function extendString(s, n, ch = " ") {
+  if (ch.length === 0) {
+    console.error("Empty char");
+    return s;
+  }
+  while (s.length < n) { s = ch + s; }
+  return s;
+}
+
+/**
+ * Export board as syntactically correct and formatted as 11x14 board javascript array
+ * @param {number[]} b board position
+ */
+function exportPosition(b, period = 4, boardWidth = 11) {
+  let result = '[\n';
+  for (let i = 0; i < b.length; i++) {
+    const rowIndex = ~~(i / boardWidth);
+    const columnIndex = i % boardWidth;
+    result += extendString(b[i].toString() + ',', period);
+    if (columnIndex === boardWidth - 1) {
+      result += '\n';
+    }
+  }
+  return result + ']\n';
+}
 
 /** @type {0 | 16} side to move: can be `0b 0000 0000` or `0b 0001 0000` */
 var sideToMove = 0;
@@ -101,22 +163,31 @@ var sideToMove = 0;
  */
 var flip = 0;
 
-/** to store the best move found in search */
+/** to store the best move found in search
+ * @type {number} */
 var bestSourceSquare;
 
-/** to store the best move found in search */
+/** to store the best move found in search
+ * @type {number} */
 var bestTargetSquare;
 
-/** pseudo legal moves for validation and highlighting */
+/** 
+ * pseudo legal moves for validation and highlighting
+ * @type {[number, number][]} - array of pairs [sourceSquare, targetSquare]
+ */
 var pseudoLegalMoves = [];
 
 /** variable to check click-on-piece state */
 var clickLock = false;
 
-/** user input variable */
+/** user input variable
+ * @type {number}
+ */
 var userSourceSquare;
 
-/** user input variable */
+/** user input variable
+ * @type {number}
+ */
 var userTargetSquare;
 
 /** default search depth */
@@ -134,6 +205,33 @@ var ply = 0;
 \******************************/
 
 /**
+ * Change side `0 -> 16, 16 -> 0`
+ * @param {0 | 16} side can be `0b 0000 0000` or `0b 0001 0000`
+ * @returns {0 | 16} Flipped side
+ */
+function flipSide(side) {
+  // @ts-ignore
+  return 16 - side;
+}
+
+/**
+ * Estimate score for current state of board
+ * @param {number} depth maximum depth of the search
+ * @param {0 | 16} side use `SIDE.red` and `SIDE.black`
+ * @param {boolean} validate if enabled search validate moves
+ * @returns {{score: number, from: number, to: number}} object that contains score and best move
+ */
+// @ts-ignore
+function estimateScore(depth = 0, side = sideToMove, validate = false) {
+  let score = search(side, - 10000, 10000, depth, validate);
+  return {
+    score,
+    from: bestSourceSquare,
+    to: bestTargetSquare
+  }
+}
+
+/**
  * Search board position for the best move
  * @param {0 | 16} sideToMove can be `0b 0000 0000` or `0b 0001 0000`
  * @param {number} alpha the minimum score that the maximizing player is assured of
@@ -141,9 +239,9 @@ var ply = 0;
  * @param {number} depth maximum depth of the search
  * 
  * if `depth == 0` then we in leaf node and using static evalution of score
- * @param {boolean} validate flag used to validate moves
+ * @param {boolean} [validate] flag used to validate moves
  */
-function search(sideToMove, alpha, beta, depth, validate) {
+function search(sideToMove, alpha, beta, depth, validate = false) {
   // we are in the leaf node
   if (depth == 0) {
     // static evaluation score
@@ -152,7 +250,7 @@ function search(sideToMove, alpha, beta, depth, validate) {
     // loop over board squares
     for (var square = 0; square < 154; square++) {
       // make sure square is on board
-      if (board[square] != -1) {
+      if (board[square] != OUTER_SQUARE) {
         // init piece
         let piece = board[square]
         
@@ -172,14 +270,30 @@ function search(sideToMove, alpha, beta, depth, validate) {
   }
 
   var oldAlpha = alpha;       // needed to check whether to store best move or not
-  /** temporary best from square */ var tempBestSourceSquare;
-  /** temporary best to square */   var tempBestTargetSquare;
+  /** temporary best from square */
+  var tempBestSourceSquare = 0;
+  /** temporary best to square */
+  var tempBestTargetSquare = 0;
   /** score of the position */
   var score = -10000;         // minus infinity
 
   // move generator variables
-  var sourceSquare, targetSquare, capturedSquare, capturedPiece;
-  var piece, pieceType, directions, stepVector;
+  /** @type {number} */
+  var sourceSquare;
+  /** @type {number} */
+  var targetSquare;
+  /** @type {number} */
+  var capturedSquare;
+  /** @type {number} */
+  var capturedPiece;
+  /** @type {number} */
+  var piece;
+  /** @type {number} */
+  var pieceType;
+  /** @type {number[]} */
+  var directions;
+  /** @type {number} */
+  var stepVector;
   
   // loop over board squares
   for (var square = 0; square < 154; square++) {
@@ -310,7 +424,7 @@ function search(sideToMove, alpha, beta, depth, validate) {
 
             // recursive negamax search call
             ply++
-            score = -search(16 - sideToMove, -beta, -alpha, depth - 1);
+            score = -search(flipSide(sideToMove), -beta, -alpha, depth - 1);
             ply--;
             
             // take back
@@ -336,7 +450,7 @@ function search(sideToMove, alpha, beta, depth, validate) {
             } 
             
             // fake capture for non-slider PIECES
-            capturedPiece += pieceType < 7;
+            capturedPiece += pieceType < 7 ? 1 : 0;
           }
           
           // condition to break out of loop over squares for non-slider PIECES
@@ -366,7 +480,7 @@ function search(sideToMove, alpha, beta, depth, validate) {
 
 /**
  * Handle user input
- * @param {number} sq - id of `<div>` element that represents square of the board
+ * @param {string} sq - id of `<div>` element that represents square of the board
  */
 function makeUserMove(sq) {
   // convert div ID to square index
@@ -375,11 +489,17 @@ function makeUserMove(sq) {
   // if user clicks on source square 
   if(!clickLock && board[clickSquare]) {
     // remove previous highlighting
-    for (let square = 0; square < 154; square++)
-      if (board[square] != -1)
+    for (let square = 0; square < 154; square++) {
+      if (board[square] != OUTER_SQUARE) {
+        // @ts-ignore
         document.getElementById(square).classList.remove('highlight');
+      }
+    }
+      
+        
     
     // highlight current square
+    // @ts-ignore
     document.getElementById(clickSquare).classList.add('highlight');
   
     // reset move list
@@ -389,15 +509,19 @@ function makeUserMove(sq) {
     search(sideToMove, -10000, 10000, 1, true);
     
     // highlight pseudo legal moves
-    for (let moveIndex = 0; moveIndex < pseudoLegalMoves.length; moveIndex++)
-      if (clickSquare == pseudoLegalMoves[moveIndex][0])
-          document.getElementById(pseudoLegalMoves[moveIndex][1]).classList.add('highlight');
+    for (let moveIndex = 0; moveIndex < pseudoLegalMoves.length; moveIndex++) {
+      if (clickSquare == pseudoLegalMoves[moveIndex][0]) {
+        let targetSquare = pseudoLegalMoves[moveIndex][1];
+        // @ts-ignore
+        document.getElementById(targetSquare).classList.add('highlight');
+      }
+    }
 
     // init user source square
     userSourceSquare = clickSquare;
     
     // lock click
-    clickLock ^= 1;
+    clickLock = !clickLock;
   }
   
   // if user clicks on destination square
@@ -406,8 +530,8 @@ function makeUserMove(sq) {
     let boardCopy = JSON.stringify(board);
 
     // extract row and column from target square
-    var col = userSourceSquare & 7;
-    var row = userSourceSquare >> 4;
+    var col = userSourceSquare & 7; // 'col' is declared but its value is never read.
+    var row = userSourceSquare >> 4; // 'row' is declared but its value is never read.
     
     // move user piece
     board[clickSquare] = board[userSourceSquare];
@@ -419,14 +543,16 @@ function makeUserMove(sq) {
         board[clickSquare] |= 7;    // convert pawn to corresponding sideToMove's queen
     
     // change sideToMove
-    sideToMove = 16 - sideToMove;
+    sideToMove = flipSide(sideToMove);
     
     // unlock click
-    clickLock ^= 1;
+    clickLock = !clickLock;
+
+    // @ts-ignore
+    var squareHighlighted = document.getElementById(clickSquare).classList.value != 'highlight';
     
     // legality checking
-    if (clickSquare == userSourceSquare ||
-        document.getElementById(clickSquare).classList.value != 'highlight' ||
+    if (clickSquare == userSourceSquare || squareHighlighted ||
         search(sideToMove, -10000, 10000, 2) == Math.abs(10000)) {
       takeUserMoveBack(boardCopy);
       return;
@@ -436,6 +562,7 @@ function makeUserMove(sq) {
     drawBoard();
     
     // highlight last move
+    // @ts-ignore
     document.getElementById(clickSquare).classList.add('highlight');
     
     // make computer move in response
@@ -452,12 +579,15 @@ function takeUserMoveBack(boardCopy) {
   board = JSON.parse(boardCopy);
   
   // change sideToMove
-  sideToMove = 16 - sideToMove;
+  sideToMove = flipSide(sideToMove);
   
   // remove previous highlighting
-  for (let square = 0; square < 154; square++)
-    if (board[square] != -1)
-      document.getElementById(square).classList.remove('highlight');    
+  for (let square = 0; square < 154; square++) {
+    if (board[square] != -1) {
+      // @ts-ignore
+      document.getElementById(square).classList.remove('highlight');
+    }
+  }
 }
 
 /**
@@ -474,9 +604,12 @@ function makeEngineMove(depth) {
     drawBoard();
     
     // highlight king square
-    for (let square = 0; square < 154; square++)
-      if (board[square] == 19)
+    for (let square = 0; square < 154; square++) {
+      if (board[square] == rA) {
+        // @ts-ignore
         document.getElementById(square).classList.add('mate');
+      }
+    }
     
     // no more moves to make
     return;
@@ -487,7 +620,7 @@ function makeEngineMove(depth) {
   board[bestSourceSquare] = 0;
   
   // change sideToMove
-  sideToMove = 16 - sideToMove;
+  sideToMove = flipSide(sideToMove);
   
   // red checkmate detection
   if(score >= 9998) {
@@ -495,12 +628,16 @@ function makeEngineMove(depth) {
     drawBoard();
     
     // highlight last move
+    // @ts-ignore
     document.getElementById(bestTargetSquare).classList.add('highlight');
     
     // highlight king square
-    for (let square = 0; square < 154; square++)
-      if (board[square] == 3)
+    for (let square = 0; square < 154; square++) {
+      if (board[square] == bA) {
+        // @ts-ignore
         document.getElementById(square).classList.add('mate');
+      }
+    }
     
     // no more moves to make
     return;
@@ -511,6 +648,7 @@ function makeEngineMove(depth) {
     drawBoard();
     
     // highlight last move
+    // @ts-ignore
     document.getElementById(bestTargetSquare).classList.add('highlight');
   }  
 }
@@ -575,6 +713,7 @@ function drawBoard() {
   xiangqiBoard += '</table>';
   
   // render chess board to screen
+  // @ts-ignore
   document.getElementById('board').innerHTML = xiangqiBoard;
 };
 
